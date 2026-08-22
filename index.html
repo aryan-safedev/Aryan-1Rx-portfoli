@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aryan MFX — Video Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0c;
+    --bg-elevated:#141416;
+    --bg-card:#18181b;
+    --ember:#ff5a1f;
+    --ember-dim:#7a2e10;
+    --teal:#14c8b4;
+    --text:#edeae4;
+    --text-dim:#8a8a8e;
+    --line:#232326;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+
+  html{scroll-behavior:smooth;}
+
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    overflow-x:hidden;
+    position:relative;
+  }
+
+  /* subtle grain */
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+    opacity:0.035;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  a{color:inherit;text-decoration:none;}
+
+  .wrap{max-width:1100px;margin:0 auto;padding:0 28px;}
+
+  /* ---------- NAV ---------- */
+  header{
+    position:sticky;top:0;z-index:50;
+    background:rgba(10,10,12,0.85);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 28px;max-width:1100px;margin:0 auto;
+  }
+  .logo{
+    font-family:'Anton',sans-serif;
+    font-size:20px;letter-spacing:0.5px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .logo .dot{width:8px;height:8px;background:var(--ember);border-radius:50%;
+    box-shadow:0 0 10px var(--ember);}
+  .nav ul{list-style:none;display:flex;gap:32px;}
+  .nav a{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;letter-spacing:1px;text-transform:uppercase;
+    color:var(--text-dim);transition:color .2s;
+    white-space:nowrap;
+  }
+  .nav a:hover{color:var(--teal);}
+  .nav-links{
+    display:flex;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .nav-links::-webkit-scrollbar{display:none;}
+  @media(max-width:640px){
+    .nav-links ul{gap:20px;}
+    .nav a{font-size:11px;}
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative;
+    padding:100px 0 70px;
+    border-bottom:1px solid var(--line);
+    overflow:hidden;
+  }
+  .hero::after{
+    content:"";
+    position:absolute;
+    right:-10%;top:-30%;
+    width:600px;height:600px;
+    background:radial-gradient(circle, rgba(255,90,31,0.14) 0%, rgba(20,200,180,0.08) 45%, transparent 70%);
+    filter:blur(10px);
+    pointer-events:none;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;color:var(--teal);
+    letter-spacing:2px;text-transform:uppercase;
+    display:flex;align-items:center;gap:10px;margin-bottom:22px;
+  }
+  .eyebrow .rec{
+    width:8px;height:8px;background:var(--ember);border-radius:50%;
+    animation:pulse 1.6s infinite;
+  }
+  @keyframes pulse{
+    0%,100%{opacity:1;}
+    50%{opacity:0.25;}
+  }
+  h1.hero-title{
+    font-family:'Anton',sans-serif;
+    font-size:clamp(48px,10vw,104px);
+    line-height:0.92;
+    letter-spacing:0.5px;
+    text-transform:uppercase;
+    max-width:900px;
+  }
+  h1.hero-title .accent{color:var(--ember);}
+  .hero-sub{
+    margin-top:28px;
+    max-width:560px;
+    font-size:17px;
+    line-height:1.7;
+    color:#c8c5bf;
+  }
+  .hero-sub b{color:var(--text);font-weight:600;}
+  .hero-sub a.tag{
+    color:var(--teal);border-bottom:1px solid rgba(20,200,180,0.35);
+  }
+
+  .timecode{
+    margin-top:44px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;color:var(--text-dim);
+    display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  }
+  .timecode .tc-readout{
+    color:var(--teal);
+    background:var(--bg-elevated);
+    border:1px solid var(--line);
+    padding:8px 14px;
+    letter-spacing:2px;
+    border-radius:3px;
+  }
+  .hero-cta{
+    margin-top:40px;display:flex;gap:14px;flex-wrap:wrap;
+  }
+  .btn{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;letter-spacing:1px;text-transform:uppercase;
+    padding:14px 26px;border-radius:2px;
+    display:inline-flex;align-items:center;gap:10px;
+    transition:transform .15s, background .2s, border-color .2s;
+    cursor:pointer;
+    border:1px solid transparent;
+  }
+  .btn-primary{
+    background:var(--ember);color:#0a0a0c;font-weight:700;
+  }
+  .btn-primary:hover{transform:translateY(-2px);}
+  .btn-ghost{
+    border-color:var(--line);color:var(--text);
+  }
+  .btn-ghost:hover{border-color:var(--teal);color:var(--teal);transform:translateY(-2px);}
+
+  /* ---------- TIMELINE DIVIDER ---------- */
+  .timeline-divider{
+    position:relative;
+    height:34px;
+    border-bottom:1px solid var(--line);
+    background:
+      repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 40px);
+    display:flex;align-items:center;
+  }
+  .timeline-divider .wrap{
+    display:flex;justify-content:space-between;width:100%;
+    font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);
+  }
+
+  /* ---------- SECTION LABEL ---------- */
+  .section{padding:90px 0;border-bottom:1px solid var(--line);}
+  .section-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;color:var(--ember);
+    letter-spacing:2px;text-transform:uppercase;
+    margin-bottom:14px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .section-label::before{
+    content:"";width:22px;height:1px;background:var(--ember);
+  }
+  .section-title{
+    font-family:'Anton',sans-serif;
+    font-size:clamp(32px,5vw,52px);
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    margin-bottom:50px;
+    max-width:700px;
+  }
+
+  /* ---------- REEL BIN GRID ---------- */
+  .bin-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:24px;
+  }
+  @media(max-width:900px){ .bin-grid{grid-template-columns:1fr;} }
+
+  .clip-card{
+    background:var(--bg-card);
+    border:1px solid var(--line);
+    border-radius:4px;
+    overflow:hidden;
+    transition:border-color .2s, transform .2s;
+  }
+  .clip-card:hover{border-color:var(--teal);transform:translateY(-4px);}
+  .clip-head{
+    padding:14px 16px;
+    display:flex;justify-content:space-between;align-items:center;
+    border-bottom:1px solid var(--line);
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;color:var(--text-dim);letter-spacing:1px;
+  }
+  .clip-head .clip-id{color:var(--teal);}
+  .clip-media{
+    aspect-ratio:9/16;
+    background:#000;
+    position:relative;
+  }
+  .clip-media.wide{aspect-ratio:16/9;}
+  .clip-media iframe, .clip-media .ig-embed-wrap{
+    width:100%;height:100%;border:0;
+  }
+  .play-card{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:14px;cursor:pointer;position:relative;
+  }
+  .play-card::before{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.55) 100%);
+  }
+  .play-card .play-btn, .play-card .play-label{ position:relative; z-index:1; }
+  .play-card .play-btn{
+    width:58px;height:58px;border-radius:50%;
+    background:rgba(237,234,228,0.08);
+    border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;color:var(--text);
+    transition:background .2s, border-color .2s, transform .2s;
+  }
+  .play-card:hover .play-btn{
+    background:var(--ember);color:#0a0a0c;border-color:var(--ember);
+    transform:scale(1.08);
+  }
+  .play-card .play-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;letter-spacing:1px;text-transform:uppercase;
+    color:var(--text-dim);
+  }
+  .clip-body{padding:16px;}
+  .clip-tag{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;color:var(--ember);
+    text-transform:uppercase;letter-spacing:1px;
+    margin-bottom:6px;display:block;
+  }
+  .clip-desc{font-size:14px;color:var(--text-dim);line-height:1.5;}
+
+  /* ---------- TOOLKIT ---------- */
+  .toolkit-row{
+    display:flex;gap:16px;flex-wrap:wrap;
+  }
+  .tool-chip{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    padding:14px 20px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    background:var(--bg-card);
+    display:flex;align-items:center;gap:10px;
+  }
+  .tool-chip .idx{color:var(--teal);}
+
+  /* ---------- ABOUT / CREDIT LIST ---------- */
+  .about-grid{
+    display:grid;grid-template-columns:1.1fr 0.9fr;gap:60px;
+  }
+  @media(max-width:800px){ .about-grid{grid-template-columns:1fr;gap:40px;} }
+  .about-text{font-size:16px;line-height:1.85;color:#c8c5bf;}
+  .about-text b{color:var(--text);}
+  .credit-box{
+    border:1px solid var(--line);
+    background:var(--bg-card);
+    padding:24px;border-radius:4px;
+  }
+  .credit-box .label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;color:var(--text-dim);
+    text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;
+  }
+  .credit-item{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 0;border-top:1px solid var(--line);
+    font-size:14px;
+  }
+  .credit-item:first-of-type{border-top:none;}
+  .credit-item a{color:var(--teal);}
+
+  /* ---------- CONTACT / SLATE ---------- */
+  .slate{
+    background:var(--bg-card);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:50px 44px;
+    position:relative;
+  }
+  .slate-strip{
+    position:absolute;top:0;left:0;right:0;height:10px;
+    background:repeating-linear-gradient(45deg, #000 0 16px, var(--text) 16px 32px);
+    border-radius:6px 6px 0 0;
+    opacity:0.85;
+  }
+  .slate-grid{
+    display:grid;grid-template-columns:repeat(2,1fr);
+    gap:24px;margin-top:30px;
+  }
+  @media(max-width:640px){ .slate-grid{grid-template-columns:1fr;} }
+  .slate-field{
+    border-bottom:1px solid var(--line);padding-bottom:14px;
+  }
+  .slate-field .k{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;color:var(--text-dim);text-transform:uppercase;
+    letter-spacing:1px;margin-bottom:8px;
+  }
+  .slate-field .v{font-size:18px;font-weight:600;}
+  .slate-field .v a:hover{color:var(--teal);}
+  .contact-title{
+    font-family:'Anton',sans-serif;
+    font-size:clamp(30px,5vw,46px);
+    text-transform:uppercase;margin-top:16px;
+    max-width:600px;
+  }
+
+  footer{
+    padding:34px 0;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;color:var(--text-dim);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
+  }
+
+  ::selection{background:var(--ember);color:#0a0a0c;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+    html{scroll-behavior:auto;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <div class="logo"><span class="dot"></span>ARYAN MFX</div>
+    <div class="nav-links">
+      <ul>
+        <li><a href="javascript:void(0)" data-scroll="#reel">Reel</a></li>
+        <li><a href="javascript:void(0)" data-scroll="#toolkit">Toolkit</a></li>
+        <li><a href="javascript:void(0)" data-scroll="#about">About</a></li>
+        <li><a href="javascript:void(0)" data-scroll="#contact">Contact</a></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow"><span class="rec"></span>Now editing — open for freelance work</div>
+    <h1 class="hero-title">Cuts that <span class="accent">hit</span>,<br>grades that <span class="accent">grip</span>.</h1>
+    <p class="hero-sub">
+      Hey, I'm <b>Aryan</b> — a video editor working across <b>short-form, long-form, and trending reels</b>.
+      I bring VFX, motion graphics, and cinematic color grading to every cut, and I've worked with
+      <a class="tag" href="https://www.instagram.com/im_akshay_pal_akku/" target="_blank" rel="noopener">@im_akshay_pal_akku</a> and multiple other creators.
+    </p>
+    <div class="timecode">
+      <span>PROJECT_REEL.prproj</span>
+      <span>29.97 FPS</span>
+      <span>Ready to render</span>
+    </div>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="javascript:void(0)" data-scroll="#reel">View the reel</a>
+      <a class="btn btn-ghost" href="javascript:void(0)" data-scroll="#contact">Get in touch</a>
+    </div>
+  </div>
+</section>
+
+<div class="timeline-divider">
+  <div class="wrap"><span>00:00</span><span>00:15</span><span>00:30</span><span>00:45</span><span>01:00</span></div>
+</div>
+
+<section class="section" id="reel">
+  <div class="wrap">
+    <div class="section-label">Media bin</div>
+    <h2 class="section-title">Selected cuts</h2>
+
+    <div class="bin-grid">
+
+      <div class="clip-card">
+        <div class="clip-head"><span class="clip-id">CLIP_01</span><span>VFX_ACTION.mov</span></div>
+        <a class="clip-media play-card" href="https://www.instagram.com/p/DcObB4lNj-Y/" target="_blank" rel="noopener" style="background:linear-gradient(160deg, #1a1410 0%, #241a12 100%);">
+          <span class="play-btn">▶</span>
+          <span class="play-label">Watch on Instagram</span>
+        </a>
+        <div class="clip-body">
+          <span class="clip-tag">VFX / Car &amp; Bike Edit</span>
+          <p class="clip-desc">Tracked effects, impact hits, and speed-ramped action cuts.</p>
+        </div>
+      </div>
+
+      <div class="clip-card">
+        <div class="clip-head"><span class="clip-id">CLIP_02</span><span>MOTION_GFX.mov</span></div>
+        <a class="clip-media wide play-card" href="https://youtu.be/kHiYuemJXN8" target="_blank" rel="noopener" style="background-size:cover;background-position:center;background-image:url('https://img.youtube.com/vi/kHiYuemJXN8/hqdefault.jpg');">
+          <span class="play-btn">▶</span>
+          <span class="play-label">Watch on YouTube</span>
+        </a>
+        <div class="clip-body">
+          <span class="clip-tag">Motion Graphics</span>
+          <p class="clip-desc">Kinetic typography and animated graphic elements.</p>
+        </div>
+      </div>
+
+      <div class="clip-card">
+        <div class="clip-head"><span class="clip-id">CLIP_03</span><span>CINEMATIC_GYM.mov</span></div>
+        <a class="clip-media play-card" href="https://www.instagram.com/p/DTNMhu9D0YG/" target="_blank" rel="noopener" style="background:linear-gradient(160deg, #101a18 0%, #12241f 100%);">
+          <span class="play-btn">▶</span>
+          <span class="play-label">Watch on Instagram</span>
+        </a>
+        <div class="clip-body">
+          <span class="clip-tag">Cinematic / Gym Edit</span>
+          <p class="clip-desc">Movie-style pacing, grade, and sound design over training footage.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="section" id="toolkit">
+  <div class="wrap">
+    <div class="section-label">Toolkit</div>
+    <h2 class="section-title">What I edit with</h2>
+    <div class="toolkit-row">
+      <div class="tool-chip"><span class="idx">01</span> Premiere Pro</div>
+      <div class="tool-chip"><span class="idx">02</span> Adobe After Effects</div>
+      <div class="tool-chip"><span class="idx">03</span> Topaz (AI Upscale &amp; Enhance)</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="about">
+  <div class="wrap">
+    <div class="section-label">About</div>
+    <h2 class="section-title">Who's behind the timeline</h2>
+    <div class="about-grid">
+      <p class="about-text">
+        I'm <b>Aryan</b>, working as a video editor with a focus on <b>short-form, long-form, and trending reels</b>.
+        My work spans VFX-driven action edits, motion graphics, and cinematic-style storytelling — built to hold
+        attention from the first frame. I've collaborated with creators across niches to turn raw footage into
+        content that actually performs.
+      </p>
+      <div class="credit-box">
+        <div class="label">Worked with</div>
+        <div class="credit-item">
+          <span>@im_akshay_pal_akku</span>
+          <a href="https://www.instagram.com/im_akshay_pal_akku/" target="_blank" rel="noopener">Instagram →</a>
+        </div>
+        <div class="credit-item">
+          <span>+ multiple other creators</span>
+          <span style="color:var(--text-dim);">ongoing</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="contact" style="border-bottom:none;">
+  <div class="wrap">
+    <div class="section-label">Call sheet</div>
+    <div class="slate">
+      <div class="slate-strip"></div>
+      <h3 class="contact-title">Got footage that needs a cut? Let's talk.</h3>
+      <div class="slate-grid">
+        <div class="slate-field">
+          <div class="k">Email</div>
+          <div class="v"><a href="mailto:1rxevil.global@gmail.com">1rxevil.global@gmail.com</a></div>
+        </div>
+        <div class="slate-field">
+          <div class="k">Phone</div>
+          <div class="v"><a href="tel:+918580751979">+91 85807 51979</a></div>
+        </div>
+        <div class="slate-field">
+          <div class="k">Instagram</div>
+          <div class="v"><a href="https://www.instagram.com/aryan.mfx/" target="_blank" rel="noopener">@aryan.mfx</a></div>
+        </div>
+        <div class="slate-field">
+          <div class="k">Availability</div>
+          <div class="v">Open — part time</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap" style="display:flex;justify-content:space-between;width:100%;flex-wrap:wrap;gap:10px;">
+    <span>© <span id="year"></span> ARYAN MFX</span>
+    <span>SHORT-FORM // LONG-FORM // VFX // MOTION GRAPHICS</span>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // smooth-scroll for internal nav links (avoids hash-navigation issues in sandboxed contexts)
+  document.querySelectorAll('a[data-scroll]').forEach(function(link){
+    link.addEventListener('click', function(e){
+      e.preventDefault();
+      var target = document.querySelector(link.getAttribute('data-scroll'));
+      if(target){ target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    });
+  });
+</script>
+
+</body>
+</html>
